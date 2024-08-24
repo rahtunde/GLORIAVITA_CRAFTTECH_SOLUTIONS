@@ -41,7 +41,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def register(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            serializer.save()
             return Response(serializer.data,  status=201)
         return Response(serializer.errors, status=400)
 

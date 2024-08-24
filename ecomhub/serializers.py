@@ -62,7 +62,7 @@ class PasswordResetSerializer(serializers.Serializer):
     
     def validate_email(self, value):
         try: 
-            user = User.objects.get(email=value)
+           User.objects.get(email=value)
         except User.DoesNotExist:
             raise serializers.ValidationError("User with this email does not exist.")
         return value
@@ -109,6 +109,11 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_average_rating(self, obj):
         approved_reviews = obj.reviews.filter(is_approved=True)
         if approved_reviews.exists():
+            # Avoid doing this; as this would cost many request to the database
+            # It would be better you do it in one request using aggregate
+            # obj.reviews.filter(is_approved=Tue).aggregate(Sum("rating", default=0)) 
+            # == {"total_rating": 400}
+            # This is much better cause you make 1 request and SQL sums it up for you
             return sum(review.rating for review in approved_reviews) / approved_reviews.count()
         return None
                
@@ -135,6 +140,8 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ["user", "created_at", "updated_at"]
     
     def get_total_amount(self, obj):
+        # Use aggregate to get the sum of the quantity * price;
+        # Ask chatGPT to use aggregate to perform this; and try to understand it
         return sum(item.quantity * item.price for item in obj.order_items.all())
     
     def validate_order_items(self, order_items):
