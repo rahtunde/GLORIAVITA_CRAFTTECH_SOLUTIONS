@@ -8,10 +8,10 @@ User = get_user_model()
 
 @receiver(post_save, sender=User)
 def assign_seller_group(sender, instance, created, *args, **kwargs):
+    # Dont hard code role choices, just use the Role chocice model
+    seller_group, _ = Group.objects.get_or_create(name="Seller")
     if instance.role == "seller": 
-        seller_group, _ = Group.objects.get_or_create(name="Seller")
         instance.groups.add(seller_group)
     else:
-        seller_group, _ = Group.objects.get_or_create(name="Seller")
         instance.groups.remove(seller_group)
         

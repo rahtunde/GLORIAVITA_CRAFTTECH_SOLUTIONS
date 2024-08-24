@@ -21,3 +21,4 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('ecomhub.urls')),
 ]
+# TODO: Include MEDIA_URL

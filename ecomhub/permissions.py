@@ -1,15 +1,17 @@
 from rest_framework import permissions
 
+# Not used: Delete
 class IsSeller(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.groups.filter(name="Seller").exists()
     
-
+# Check through your permissions; for user that needs to be authenticated add 
+# `request.user.is_authenticated and ...`, so that you do not perform a filter on a non-authenticated user
 class IsSellerOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return request.user.groups.filter(name="Seller").exists()
+        return request.user.is_seller()
     
 
 class IsSellerOrStaffOrReadOnly(permissions.BasePermission):
@@ -20,14 +22,21 @@ class IsSellerOrStaffOrReadOnly(permissions.BasePermission):
             return True
         
         # Allow create and other write operations only for sellers and staff
-        return request.user.is_staff or request.user.groups.filter(name="Seller").exists()   
+        return request.user.is_staff or request.user.is_seller()
     
     def has_object_permission(self, request, view, obj):
+        """
+        Check object permission of product
+        
+        Args:
+            request: HTTP Request
+            view: ...
+            obj (Product): the product instance we would check permission against
+        """
         # Allow read-only methods for all users
         if request.method in permissions.SAFE_METHODS:
             return True
-        # Allow write operations only for sellers (who own the object) and staff
-        return request.user.is_staff or (hasattr(obj, "seller") and obj.seller == request.user)
+        return request.user.is_staff or obj.seller == request.user
     
     
 class IsStaffOrReadOnly(permissions.BasePermission):
@@ -41,8 +50,9 @@ class IsStaffOrReadOnly(permissions.BasePermission):
             return True
 
         # Write permissions are only allowed to staff members.
-        return request.user and request.user.is_staff
+        return request.user.is_authenticated and request.user.is_staff
 
+    # Remove this has this does not check any obj constraints or permission
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request,
         # so we'll always allow GET, HEAD or OPTIONS requests.
