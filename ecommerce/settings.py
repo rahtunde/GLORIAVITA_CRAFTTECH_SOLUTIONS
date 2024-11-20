@@ -10,33 +10,59 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+import environ
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# Initialize environment variable
+env = environ.Env(
+    # Set casting, default value
+    DEBUG=(bool, False)
+)
+
+# Reading .env file
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-vne893uww5!12q83c&vugno*d&bu6$p32y%h$*r5-vu#t(*!*t'
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
+DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = []
 
-AUTH_USER_MODEL = 'ecomhub.CustomUser'
+AUTH_USER_MODEL = 'users.CustomUser'
 
 # Stipe secret key here 
-STRIPE_SECRET_KEY = ""
+PAYSTACK_SECRET_KEY = env("PAYSTACK_SECRET_KEY") 
 
 THIRD_PARTY_APP = [
     "rest_framework",
     "rest_framework_simplejwt",
     "django_filters",
-    "ecomhub",
+    "drf_yasg",
+    # "django_otp",
+    # "django_otp.plugins.otp_totp",  # Time-based One-Time Password
+    # "two_factor",  # Two-factor authentication
+    # "two_factor.plugins.phonenumber",  # SMS-based 2FA (optional)
+    # "qrcode", 
+    
+    "cart",
+    "orders",
+    "products",
+    "payments",
+    "users",
+    "reviews",
 ]
 
 # Application definition
@@ -59,6 +85,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_otp.middleware.OTPMiddleware', # OTP middleware
 ]
 
 ROOT_URLCONF = 'ecommerce.urls'
@@ -95,9 +122,9 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -130,6 +157,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "OPTIONS": {
+            'min_length': 8,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -157,6 +187,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Media setting for image
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -173,4 +208,51 @@ EMAIL_HOST_USER = 'your_email@example.com'
 EMAIL_HOST_PASSWORD = 'your_email_password'
 DEFAULT_FROM_EMAIL = 'your_email@example.com'
 ADMIN_EMAIL = 'admin@email.com'
+
+# For better cashing system by using redis 
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/1',
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         }
+#     }
+# }
+
+
+TESTING = True
+
+# Check if testing is true  or not
+if not DEBUG and not TESTING:
+    # force HTTPS
+    SECURE_SSL_REDIRECT = True # Redirect HTTP to HTTPS
+else:
+    SECURE_SSL_REDIRECT = False
+    
+
+# Secure  cookies 
+CSRF_COOKIES_SECURE = True # Send CSRF cookies over HTTPS only
+SESSION_COOKIE_SECURE = True # Send session cookie over HTTPS only
+
+# HSTS (Host Strict Transport Security)
+SECURE_HSTS_SECONDS = 31536000 # Enforce HTTPS for the next year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True # Preload HSTS
+
+SECURE_BROWSER_XSS_FILTER = True # Prevent XSS
+X_FRAME_OPTIONS = "DENY" # Prevent clickjacking
+
+FIELD_ENCRYPTION_KEY = env("FIELD_ENCRYPTION_KEY") # Encryption key for encrypted user information
+
+# Swagger config
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    },
+}
 
