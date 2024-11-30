@@ -247,6 +247,9 @@ FIELD_ENCRYPTION_KEY = env("FIELD_ENCRYPTION_KEY") # Encryption key for encrypte
 
 # Swagger config
 SWAGGER_SETTINGS = {
+    'LOGIN_URL': '/api/users/login/',  # custom login URL
+    # 'LOGOUT_URL': '/logout/',  # Optional logout URL
+    'USE_SESSION_AUTH': True,  # Enable session authentication
     'SECURITY_DEFINITIONS': {
         'Bearer': {
             'type': 'apiKey',

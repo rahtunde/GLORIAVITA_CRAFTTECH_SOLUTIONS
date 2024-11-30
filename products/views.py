@@ -6,8 +6,7 @@ from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import (Product, Brand,
-                     Category, WishList
+from .models import (Product, Brand, Category, WishList
                      )
 from .serializers import (ProductSerializer, CategorySerializer,
                           BrandSerializer, WishlistSerializer)
